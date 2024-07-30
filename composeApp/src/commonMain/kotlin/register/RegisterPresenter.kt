@@ -9,16 +9,16 @@ import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
-import login.LoginScreen
+import screens.Screens
 import utils.Validation
 
 class RegisterPresenter(
     private val navigator: Navigator,
     private val validation: Validation
-) : Presenter<RegisterScreen.State> {
+) : Presenter<RegisterState> {
 
     @Composable
-    override fun present(): RegisterScreen.State {
+    override fun present(): RegisterState {
 
         var isLoading by rememberSaveable { mutableStateOf(false) }
         var status by rememberSaveable { mutableStateOf(false) }
@@ -30,24 +30,40 @@ class RegisterPresenter(
         var confirmPassword by rememberSaveable { mutableStateOf("") }
         var confirmPasswordError by rememberSaveable { mutableStateOf<String?>(null) }
 
-        val emailResult = validation.validateEmail(email)
-        val passwordResult = validation.validatePassword(password)
-        val confirmPasswordResult =
-            validation.validateConfirmPassword(password, confirmPassword)
+        fun validateInputs(): Boolean {
+            val emailResult = validation.validateEmail(email)
+            val passwordResult = validation.validatePassword(password)
+            val confirmPasswordResult =
+                validation.validateConfirmPassword(password, confirmPassword)
 
-        val hasError = listOf(
-            emailResult,
-            passwordResult,
-            confirmPasswordResult
-        ).any { !it.successful }
+            val hasError = listOf(
+                emailResult,
+                passwordResult,
+                confirmPasswordResult
+            ).any { !it.successful }
 
-        if (hasError) {
-            emailError = emailResult.errorMessage
-            passwordError = passwordResult.errorMessage
-            confirmPasswordError = confirmPasswordResult.errorMessage
+            if (hasError) {
+                emailError = emailResult.errorMessage
+                passwordError = passwordResult.errorMessage
+                confirmPasswordError = confirmPasswordResult.errorMessage
+            } else {
+                emailError = null
+                passwordError = null
+                confirmPasswordError = null
+            }
+
+            return !hasError
         }
 
-        return RegisterScreen.State(
+        fun submit(){
+
+            if (!validateInputs()){
+                return
+            }
+
+        }
+
+        return RegisterState(
             isLoading = isLoading,
             status = status,
             error = error,
@@ -59,23 +75,23 @@ class RegisterPresenter(
             confirmPasswordError = confirmPasswordError
         ) { event ->
             when (event) {
-                is RegisterScreen.Event.Email -> {
+                is RegisterEvent.Email -> {
                     email = event.email
                 }
 
-                is RegisterScreen.Event.Password -> {
+                is RegisterEvent.Password -> {
                     password = event.password
                 }
 
-                is RegisterScreen.Event.ConfirmPassword -> {
+                is RegisterEvent.ConfirmPassword -> {
                     confirmPassword = event.confirmPassword
                 }
 
-                RegisterScreen.Event.Submit -> {
-
+                RegisterEvent.Submit -> {
+                    submit()
                 }
 
-                RegisterScreen.Event.Clear -> {
+                RegisterEvent.Clear -> {
                     isLoading = false
                     status = false
                     error = ""
@@ -87,11 +103,11 @@ class RegisterPresenter(
                     confirmPasswordError = ""
                 }
 
-                RegisterScreen.Event.NavigateToLoginScreen -> {
-                    navigator.goTo(LoginScreen)
+                RegisterEvent.NavigateToLoginScreen -> {
+                    navigator.goTo(Screens.LoginScreen)
                 }
 
-                RegisterScreen.Event.Pop -> {
+                RegisterEvent.Pop -> {
                     navigator.pop()
                 }
             }
@@ -104,9 +120,9 @@ class RegisterPresenter(
             navigator: Navigator,
             context: CircuitContext
         ): Presenter<*>? {
-            when (screen) {
-                RegisterScreen -> return RegisterPresenter(navigator, validation)
-                else -> return null
+            return  when (screen) {
+                is Screens.RegisterScreen -> RegisterPresenter(navigator, validation)
+                else -> null
             }
         }
     }

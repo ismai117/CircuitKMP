@@ -9,15 +9,16 @@ import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import screens.Screens
 import utils.Validation
 
 class ForgetPasswordPresenter(
     private val navigator: Navigator,
-    private val validation: Validation
-) : Presenter<ForgetPasswordScreen.State> {
+    private val validation: Validation,
+) : Presenter<ForgetPasswordState> {
 
     @Composable
-    override fun present(): ForgetPasswordScreen.State {
+    override fun present(): ForgetPasswordState {
 
         var isLoading by rememberSaveable { mutableStateOf(false) }
         var status by rememberSaveable { mutableStateOf(false) }
@@ -25,23 +26,41 @@ class ForgetPasswordPresenter(
         var email by rememberSaveable { mutableStateOf("") }
         var emailError by rememberSaveable { mutableStateOf<String?>(null) }
 
-        val emailResult = validation.validateEmail(email)
+        fun validateInputs(): Boolean {
+            val emailResult = validation.validateEmail(email)
 
-        val hasError = listOf(
-            emailResult
-        ).any { !it.successful }
+            val hasError = listOf(
+                emailResult
+            ).any { !it.successful }
 
-        if (hasError) {
-            emailError = emailResult.errorMessage
+            if (hasError) {
+                emailError = emailResult.errorMessage
+            } else {
+                emailError = null
+            }
+
+            return !hasError
         }
 
-        return ForgetPasswordScreen.State() { event ->
+        fun submit() {
+
+            if (!validateInputs()){
+                return
+            }
+
+        }
+
+        return ForgetPasswordState() { event ->
             when (event) {
-                is ForgetPasswordScreen.Event.Email -> {
+                is ForgetPasswordEvent.Email -> {
                     email = event.email
                 }
 
-                ForgetPasswordScreen.Event.Pop -> {
+                ForgetPasswordEvent.Submit -> {
+                    submit()
+                }
+
+                ForgetPasswordEvent.Pop -> {
                     navigator.pop()
                 }
             }
@@ -52,10 +71,10 @@ class ForgetPasswordPresenter(
         override fun create(
             screen: Screen,
             navigator: Navigator,
-            context: CircuitContext
+            context: CircuitContext,
         ): Presenter<*>? {
-            when (screen) {
-                ForgetPasswordScreen -> return ForgetPasswordPresenter(navigator, validation)
+            return when (screen) {
+                is Screens.ForgetPasswordScreen -> ForgetPasswordPresenter(navigator, validation)
                 else -> return null
             }
         }

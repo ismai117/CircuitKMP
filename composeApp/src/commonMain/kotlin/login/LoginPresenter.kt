@@ -9,17 +9,16 @@ import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
-import forgetPassword.ForgetPasswordScreen
-import register.RegisterScreen
+import screens.Screens
 import utils.Validation
 
 class LoginPresenter(
     private val navigator: Navigator,
     private val validation: Validation
-) : Presenter<LoginScreen.State> {
+) : Presenter<LoginState> {
 
     @Composable
-    override fun present(): LoginScreen.State {
+    override fun present(): LoginState {
 
         var isLoading by rememberSaveable { mutableStateOf(false) }
         var status by rememberSaveable { mutableStateOf(false) }
@@ -30,20 +29,35 @@ class LoginPresenter(
         var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
         var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
-        val emailResult = validation.validateEmail(email)
-        val passwordResult = validation.validatePassword(password)
+        fun validateInputs(): Boolean {
+            val emailResult = validation.validateEmail(email)
+            val passwordResult = validation.validatePassword(password)
 
-        val hasError = listOf(
-            emailResult,
-            passwordResult
-        ).any { !it.successful }
+            val hasError = listOf(
+                emailResult,
+                passwordResult
+            ).any { !it.successful }
 
-        if (hasError) {
-            emailError = emailResult.errorMessage
-            passwordError = passwordResult.errorMessage
+            if (hasError) {
+                emailError = emailResult.errorMessage
+                passwordError = passwordResult.errorMessage
+            } else {
+                emailError = null
+                passwordError = null
+            }
+
+            return !hasError
         }
 
-        return LoginScreen.State(
+        fun submit() {
+
+            if (!validateInputs()) {
+                return
+            }
+
+        }
+
+        return LoginState(
             isLoading = isLoading,
             status = status,
             error = error,
@@ -54,39 +68,39 @@ class LoginPresenter(
             passwordVisible = passwordVisible
         ) { event ->
             when (event) {
-                is LoginScreen.Event.Email -> {
+                is LoginEvent.Email -> {
                     email = event.email
                 }
 
-                is LoginScreen.Event.Password -> {
+                is LoginEvent.Password -> {
                     password = event.password
                 }
 
-                is LoginScreen.Event.ShowPassword -> {
+                is LoginEvent.ShowPassword -> {
                     passwordVisible = event.visible
                 }
 
-                LoginScreen.Event.Submit -> {
+                LoginEvent.Submit -> {
+                    submit()
+                }
+
+                LoginEvent.ResetMessage -> {
 
                 }
 
-                LoginScreen.Event.ResetMessage -> {
+                LoginEvent.Clear -> {
 
                 }
 
-                LoginScreen.Event.Clear -> {
-
+                LoginEvent.NavigateToRegisterScreen -> {
+                    navigator.goTo(Screens.RegisterScreen)
                 }
 
-                LoginScreen.Event.NavigateToRegisterScreen -> {
-                    navigator.goTo(RegisterScreen)
+                LoginEvent.NavigateToForgetPasswordScreen -> {
+                    navigator.goTo(Screens.ForgetPasswordScreen)
                 }
 
-                LoginScreen.Event.NavigateToForgetPasswordScreen -> {
-                    navigator.goTo(ForgetPasswordScreen)
-                }
-
-                LoginScreen.Event.Pop -> {
+                LoginEvent.Pop -> {
                     navigator.pop()
                 }
 
@@ -103,7 +117,7 @@ class LoginPresenter(
             context: CircuitContext
         ): Presenter<*>? {
             return when (screen) {
-                is LoginScreen -> LoginPresenter(navigator, validation)
+                is Screens.LoginScreen -> LoginPresenter(navigator, validation)
                 else -> null
             }
         }

@@ -37,8 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import authapp.composeapp.generated.resources.Res
 import authapp.composeapp.generated.resources.google
-import com.slack.circuit.runtime.CircuitUiEvent
-import com.slack.circuit.runtime.CircuitUiState
+import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.runtime.ui.Ui
 import io.github.alexzhirkevich.compottie.LottieAnimation
@@ -48,21 +47,12 @@ import io.github.alexzhirkevich.compottie.animateLottieCompositionAsState
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import screens.Screens
 
-data object StarterScreen : Screen{
-    data class State(
-        val eventSink: (Event) -> Unit
-    ) : CircuitUiState
-    sealed class Event : CircuitUiEvent {
-        data object NavigateToLoginScreen : Event()
-        data object NavigateToRegisterScreen : Event()
-    }
-}
-
-class StarterScreenContent : Ui<StarterScreen.State> {
+class Starter : Ui<StarterState> {
 
     @Composable
-    override fun Content(state: StarterScreen.State, modifier: Modifier) {
+    override fun Content(state: StarterState, modifier: Modifier) {
 
         val snackbarHostState = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
@@ -148,7 +138,7 @@ class StarterScreenContent : Ui<StarterScreen.State> {
 
                     Button(
                         onClick = {
-                            state.eventSink(StarterScreen.Event.NavigateToLoginScreen)
+                            state.eventSink(StarterEvent.NavigateToLoginScreen)
                         },
                         modifier = modifier.weight(1f)
                     ) {
@@ -161,7 +151,7 @@ class StarterScreenContent : Ui<StarterScreen.State> {
 
                     OutlinedButton(
                         onClick = {
-                            state.eventSink(StarterScreen.Event.NavigateToRegisterScreen)
+                            state.eventSink(StarterEvent.NavigateToRegisterScreen)
                         },
                         modifier = modifier.weight(1f)
                     ) {
@@ -213,12 +203,21 @@ class StarterScreenContent : Ui<StarterScreen.State> {
 
     }
 
+    class Factory : Ui.Factory {
+        override fun create(screen: Screen, context: CircuitContext): Ui<*>? {
+            return when(screen){
+                is Screens.StarterScreen -> Starter()
+                else -> null
+            }
+        }
+    }
+
 }
 
 @Composable
 fun StarterScreenContentPreview(){
-    StarterScreenContent().Content(
-        state = StarterScreen.State(eventSink = {}),
+    Starter().Content(
+        state = StarterState(eventSink = {}),
         modifier = Modifier
     )
 }

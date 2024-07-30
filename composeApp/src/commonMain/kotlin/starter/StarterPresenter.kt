@@ -5,23 +5,22 @@ import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
-import login.LoginScreen
-import register.RegisterScreen
+import screens.Screens
 
 class StarterPresenter(
     private val navigator: Navigator
-) : Presenter<StarterScreen.State> {
+) : Presenter<StarterState> {
 
     @Composable
-    override fun present(): StarterScreen.State {
-        return StarterScreen.State(
+    override fun present(): StarterState {
+        return StarterState(
             eventSink = { event ->
                 when (event) {
-                    StarterScreen.Event.NavigateToLoginScreen -> {
-                        navigator.goTo(LoginScreen)
+                    StarterEvent.NavigateToLoginScreen -> {
+                        navigator.goTo(Screens.LoginScreen)
                     }
-                    StarterScreen.Event.NavigateToRegisterScreen -> {
-                        navigator.goTo(RegisterScreen)
+                    StarterEvent.NavigateToRegisterScreen -> {
+                        navigator.goTo(Screens.RegisterScreen)
                     }
                 }
             }
@@ -34,9 +33,9 @@ class StarterPresenter(
             navigator: Navigator,
             context: CircuitContext
         ): Presenter<*>? {
-            when(screen){
-                StarterScreen -> return StarterPresenter(navigator)
-                else -> return null
+            return when(screen){
+                is Screens.StarterScreen ->  StarterPresenter(navigator)
+                else -> null
             }
         }
     }

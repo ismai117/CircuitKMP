@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+    id("kotlin-parcelize")
 }
 
 kotlin {
@@ -44,6 +45,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation("com.slack.circuit:circuit-foundation:0.22.2")
             implementation("io.github.alexzhirkevich:compottie:1.1.2")
+            api("dev.icerock.moko:parcelize:0.9.0")
         }
     }
 }
